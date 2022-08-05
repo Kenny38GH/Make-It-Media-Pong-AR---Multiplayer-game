@@ -9,7 +9,6 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 {
 
     public GameObject playerPrefabs;
-    public Transform spawnPosition;
     public GameObject PosObj,PosObj2,PosBall; // Positions des spawns
 
     public GameObject GameEnvironnementGameobject;
@@ -53,13 +52,8 @@ public class SpawnManager : MonoBehaviourPunCallbacks
 
     public override void OnJoinedRoom()
     {
-        if (PhotonNetwork.IsConnectedAndReady)
-        {
+            Debug.Log("SPAWN");
             SpawnPlayer();
-        }
-
-
-       
     }
     #endregion
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+
+// Script pour placer le terrain lors de la detection d'une surface plane au milieu de l'écran
 public class ARPlacementManager : MonoBehaviour
 {
     ARRaycastManager m_ARRaycastManager;

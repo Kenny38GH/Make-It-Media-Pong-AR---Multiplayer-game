@@ -8,6 +8,7 @@ using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Pun.UtilityScripts;
 
+// Script principale de l'application lors d'une partie: Instantiations des joueurs et déroulement de la partie --> Score, Déconnexion, Réajustement du terrain...
 public class gameScriptV2 : MonoBehaviourPunCallbacks
 {
     public List<string> ListOfPlayers; // Liste des joueurs prêts à jouer
@@ -31,6 +32,7 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
     {
         J1GameObject = new GameObject();
         J2GameObject = new GameObject();
+        BallGameObject = new GameObject();
         view = GetComponent<PhotonView>();
         ListOfPlayers = new List<string>();
     }
@@ -72,9 +74,16 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         {
             PhotonList.text += player + "\n";
         }
+        if(J1GameObject != null)
+        {
+            J1GameObject.transform.rotation = PosObj.transform.rotation;
+        }
+        if(J2GameObject != null)
+        {
+            J2GameObject.transform.rotation = PosObj.transform.rotation;
+        }
     }
     public void RetourLobby(){
-        //PhotonNetwork.Disconnect();
         view.RPC("Disconnection",RpcTarget.Others);
         PhotonNetwork.LeaveRoom();
     }
@@ -85,12 +94,9 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
 
     public void PlaceMyPlayer() // Methode pour placer notre joueur
     {
-        view.RPC("Respawn",RpcTarget.Others);
-
-        if(ListOfPlayers.Count == 0 & PhotonNetwork.CurrentRoom.Players.Count == 1) // Si je suis le premier joueur a me placer
+        if(ListOfPlayers.Count == 0 && !isReady) // Si je suis le premier joueur a me placer
         {
-            Vector3 pos_player = PosObj.transform.position;
-            //SpawnPlayerEverywhere(pos_player);
+            SpawnPlayerEverywhere(0);
             ListOfPlayers.Add(PhotonNetwork.LocalPlayer.NickName); // On ajoute le player a la liste des joueurs pret et on l'envoie aux autres
             foreach (string player in ListOfPlayers)
             {
@@ -100,22 +106,24 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         }
         if(ListOfPlayers.Count == 1 && !isReady) // Si je suis le deuxième joueur a me placer
         {
-            Vector3 pos_player = PosObj2.transform.position;
+            J2GameObject.transform.position = PosObj.transform.position;
             isRight = true;
-            //SpawnPlayerEverywhere(pos_player);
             ListOfPlayers.Add(PhotonNetwork.LocalPlayer.NickName);
             view.RPC("clearList",RpcTarget.OthersBuffered);
             foreach (string player in ListOfPlayers)
             {
                 view.RPC("SendListOfPlayer",RpcTarget.OthersBuffered, player);
             }
-            isReady = true;
-            //StartCoroutine(LaunchBallOnlyText()); // On lance la partie
+            SpawnPlayerEverywhere(1);
+
+            view.RPC("LancementDeLaBalle",RpcTarget.All); // On lance la partie
+            isReady = true; 
         }
     }
 
     public void AdjustMyPlayer() // Si le joueur décide de réajuster son terrain
         {
+            DespawnPlayer();
             isReady = false;
             foreach(string player in ListOfPlayers) // On supprime le joueur de la Liste des joueurs prêts
             {
@@ -130,9 +138,9 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
             {
                 view.RPC("SendListOfPlayer",RpcTarget.Others, player);
             }
-
+            view.RPC("RespawnAfterAdjustmentOfOtherPlayer",RpcTarget.Others);
             PhotonNetwork.LocalPlayer.SetScore(0);
-            DespawnPlayer();
+            
         }
 
         
@@ -143,8 +151,7 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         PhotonNetwork.LocalPlayer.SetScore(0);
         DespawnPlayer();
 
-        Vector3 pos_player = PosObj.transform.position;
-        SpawnPlayerEverywhere(pos_player);
+        SpawnPlayerEverywhere(0);
         UpdateScoreOfPlayers();
     }
   
@@ -196,18 +203,68 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         return PhotonNetwork.PlayerList[0];
     }
 
+#region BALL METHODS
+    IEnumerator LaunchBall()
+    {
+        int nb = 3;
+            for (int i = 0; i < 3; i++) 
+            {
+                TxtRoom.text = nb.ToString();
+                nb--;
+                yield return new WaitForSeconds(1);
+            }
+        TxtRoom.text = "JOUEZ !";
+        if(ListOfPlayers.Count == 2)
+        {
+             BallGameObject = Instantiate(BallPrefab,PosBall.transform.position,PosObj.transform.rotation);
+            //PhotonNetwork.Instantiate(BallPrefab.name,PosBall.transform.position, PosBall.transform.rotation,0); // NEED TO CHANGE THIS INSTANTIATION
+        } 
+    }
+
+    IEnumerator LaunchBallOnlyText()
+    {
+        int nb = 3;
+            for (int i = 0; i < 3; i++) 
+            {
+                TxtRoom.text = nb.ToString();
+                nb--;
+                yield return new WaitForSeconds(1);
+            }
+            TxtRoom.text = "JOUEZ !";
+    }
+
+    public void StartLaunchBall()
+    {
+        StartCoroutine(LaunchBall());
+    }
+
+    public void StartLaunchBallText()
+    {
+        StartCoroutine(LaunchBallOnlyText());
+    }
+
+#endregion
+
 #region Spawn et Despawn
 
-    private void SpawnPlayerEverywhere(Vector3 pos_player)
+    private void SpawnPlayerEverywhere(int pos)
     {
+        Vector3 pos_player = new Vector3(0,0,0);
+        if(pos == 0)
+        {
+            pos_player = PosObj.transform.position;
+        }
+        if(pos == 1)
+        {
+            pos_player = PosObj2.transform.position;
+        }
         J1GameObject = Instantiate(PlayerPrefab,pos_player,PosObj.transform.rotation);
         Debug.Log("Spawn local");
-        Debug.Log(J1GameObject.transform.rotation);
         PhotonView J1playerPhotonView  = J1GameObject.transform.root.gameObject.GetPhotonView();
         
         if (PhotonNetwork.AllocateViewID(J1playerPhotonView))
         {
-            view.RPC("SpawnPlayerOnNetwork", RpcTarget.OthersBuffered,pos_player - GameEnvironementGameObject.transform.position, J1playerPhotonView.ViewID);
+            view.RPC("SpawnPlayerOnNetwork", RpcTarget.OthersBuffered, pos , J1playerPhotonView.ViewID);
         }
         else
         {
@@ -218,7 +275,6 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
     }
     private void DespawnPlayer()
     {
-        //PhotonNetwork.DestroyPlayerObjects(PhotonNetwork.LocalPlayer); Ne semble pas fonctionner
         view.RPC("DespawnPlayerOnNetwork", RpcTarget.OthersBuffered);
         Destroy(J1GameObject);
         Destroy(J2GameObject);
@@ -234,21 +290,29 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         {
             PhotonNetwork.LocalPlayer.SetScore(0);
             DespawnPlayer();
-            Vector3 pos_player = PosObj.transform.position;
             isRight = false;
-            SpawnPlayerEverywhere(pos_player);
+            SpawnPlayerEverywhere(0);
             Debug.Log("Respawn Effectif");
         }
         
     }
     [PunRPC]
-    void SpawnPlayerOnNetwork(Vector3 pos_player, int id)
+    void SpawnPlayerOnNetwork(int pos, int id)
     {
-        J2GameObject = Instantiate(PlayerPrefab,pos_player + GameEnvironementGameObject.transform.position,PosObj.transform.rotation);
+        Vector3 pos_player = new Vector3(0,0,0);
+        if(pos == 0)
+        {
+            pos_player = PosObj.transform.position;
+        }
+        if(pos == 1)
+        {
+            pos_player = PosObj2.transform.position;
+        }
+        J2GameObject = Instantiate(PlayerPrefab,pos_player,PosObj.transform.rotation);
         PhotonView viewJ2 = J2GameObject.transform.root.gameObject.GetPhotonView();
         viewJ2.ViewID = id;
-        Debug.Log("SpwanPlayerOnNetwork");
-        Debug.Log(PosObj.transform.rotation);
+        Debug.Log("SpawnPlayerOnNetwork");
+        
     }
     [PunRPC]
     void DespawnPlayerOnNetwork()
@@ -284,11 +348,32 @@ public class gameScriptV2 : MonoBehaviourPunCallbacks
         isRight = false;
         PhotonNetwork.LocalPlayer.SetScore(0);
         DespawnPlayer();
-        Vector3 pos_player = PosObj.transform.position;
-        SpawnPlayerEverywhere(pos_player);
+        SpawnPlayerEverywhere(0);
         ListOfPlayers = new List<string>();
         ListOfPlayers.Add(PhotonNetwork.LocalPlayer.NickName);
         UpdateScoreOfPlayers();
+    }
+    [PunRPC]
+    void RespawnAfterAdjustmentOfOtherPlayer()
+    {
+        DespawnPlayer();
+        Debug.Log("Player has to respawn");
+        CheckPlayerList();
+        isRight = false;
+        PhotonNetwork.LocalPlayer.SetScore(0);
+        SpawnPlayerEverywhere(0);
+        UpdateScoreOfPlayers();
+    }
+    [PunRPC]
+    void LancementDeLaBalle()
+    {
+        //view.RPC("CountdownBeforeBall",RpcTarget.All);
+        StartLaunchBall();
+    }
+    [PunRPC]
+    void CountdownBeforeBall()
+    {
+        StartLaunchBallText();
     }
 #endregion
 }

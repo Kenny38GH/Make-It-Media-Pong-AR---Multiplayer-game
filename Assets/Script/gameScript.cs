@@ -8,6 +8,8 @@ using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Pun.UtilityScripts;
 
+// Old Script not using this one anymore
+
 public class gameScript : MonoBehaviourPunCallbacks
 {
     public Text TxtRoom,TxtPlayerOne,TxtPlayerTwo,TxtScore;

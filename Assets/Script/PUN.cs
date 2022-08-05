@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using Photon.Pun;
 using Photon.Realtime;
 
+// Création de Room sur le serveur Photon / Pouvoir les rejoindres et les afficher sur le menu
+
 public class PUN : MonoBehaviourPunCallbacks,IMatchmakingCallbacks
 {
     public GameObject canvas,button;

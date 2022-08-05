@@ -1,9 +1,14 @@
-using System.Collections;
 using System;
+using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_2018_4_OR_NEWER
+using UnityEngine.Networking;
+#endif
 using UnityEngine.UI;
-using Photon.Pun;
+
+// Placement du joueur au milieu du terrain, Contrôle et Comportements
 
 public class PongPaddle : MonoBehaviourPun
 {
@@ -36,13 +41,15 @@ public class PongPaddle : MonoBehaviourPun
     {
         if(view.IsMine)
        {
+        #if !UNITY_STANDALONE_ANDROID
             float moveY = Input.GetAxis("Horizontal") * speed * Time.deltaTime;
             float newY = transform.position.y + moveY;
             if (newY > maxY) newY = maxY;
             else if (newY < minY) newY = minY;
 
-            transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-
+            transform.position = new Vector3(transform.position.x, newY, transform.position.z); // DECOMMANTER POUR TESTER LES CONTROLES PC
+        #endif
+        #if UNITY_ANDROID
             if (Input.touchCount > 0)
             {
                 touch = Input.GetTouch(0);
@@ -55,6 +62,7 @@ public class PongPaddle : MonoBehaviourPun
                     transform.position = new Vector3(transform.position.x,newY,transform.position.z);
                 }
             }
+        #endif
         }
     }
 }

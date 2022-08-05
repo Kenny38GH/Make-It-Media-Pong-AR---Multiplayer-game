@@ -6,6 +6,8 @@ using Photon.Pun;
 using Photon.Realtime;
 using Photon.Pun.UtilityScripts;
 
+// Behaviour of the Ball and Scoring
+
 public class PongBall : MonoBehaviour
 {
     public float speed = 0.0f;
@@ -16,16 +18,16 @@ public class PongBall : MonoBehaviour
 
     private void Awake()
     {
-        playerOne = GameObject.Find("GameManager").GetComponent<gameScript>().TxtPlayerOne.text;
-        playerTwo = GameObject.Find("GameManager").GetComponent<gameScript>().TxtPlayerTwo.text;
+        playerOne = GameObject.Find("GameManager").GetComponent<gameScriptV2>().TxtPlayerOne.text;
+        playerTwo = GameObject.Find("GameManager").GetComponent<gameScriptV2>().TxtPlayerTwo.text;
         rb = GetComponent<Rigidbody>();
         view = GetComponent<PhotonView>();
     }
     public void Start()
     {
         Launch();
-        Text testPos = GameObject.Find("PosTest").GetComponent<Text>();
-        testPos.text = "Speed: " + speed + "\n" + transform.position;
+        //Text testPos = GameObject.Find("PosTest").GetComponent<Text>();
+        //testPos.text = "Speed: " + speed + "\n" + transform.position;
     }
 
     private void Launch()
@@ -37,12 +39,12 @@ public class PongBall : MonoBehaviour
 
     private void checkPlayers()
     {
-        playerOne = GameObject.Find("GameManager").GetComponent<gameScript>().TxtPlayerOne.text;
-        playerTwo = GameObject.Find("GameManager").GetComponent<gameScript>().TxtPlayerTwo.text;
+        playerOne = GameObject.Find("GameManager").GetComponent<gameScriptV2>().TxtPlayerOne.text;
+        playerTwo = GameObject.Find("GameManager").GetComponent<gameScriptV2>().TxtPlayerTwo.text;
     }
 
     private Player FindPlayer(string player){
-        return GameObject.Find("GameManager").GetComponent<gameScript>().PlayerInPhotonPlayerList(player);
+        return GameObject.Find("GameManager").GetComponent<gameScriptV2>().PlayerInPhotonPlayerList(player);
     }
 
     public void OnCollisionEnter(Collision collision)
@@ -57,7 +59,7 @@ public class PongBall : MonoBehaviour
 
                 view.RPC("UpdateScoreForAllPlayers",RpcTarget.All);
                 PhotonNetwork.Destroy(view);
-                GameObject.Find("GameManager").GetComponent<gameScript>().StartLaunchBall();
+                GameObject.Find("GameManager").GetComponent<gameScriptV2>().StartLaunchBall();
                 view.RPC("UpdateLaunchBallText",RpcTarget.Others);
 
             }
@@ -68,7 +70,7 @@ public class PongBall : MonoBehaviour
 
                 view.RPC("UpdateScoreForAllPlayers",RpcTarget.All);
                 PhotonNetwork.Destroy(view);
-                GameObject.Find("GameManager").GetComponent<gameScript>().StartLaunchBall();
+                GameObject.Find("GameManager").GetComponent<gameScriptV2>().StartLaunchBall();
                 view.RPC("UpdateLaunchBallText",RpcTarget.Others);
             }
 
@@ -79,11 +81,11 @@ public class PongBall : MonoBehaviour
     [PunRPC]
     void UpdateScoreForAllPlayers()
     {
-        GameObject.Find("GameManager").GetComponent<gameScript>().UpdateListOfPlayers();
+        GameObject.Find("GameManager").GetComponent<gameScriptV2>().UpdateScoreOfPlayers();
     }
     [PunRPC]
     void UpdateLaunchBallText()
     {
-        GameObject.Find("GameManager").GetComponent<gameScript>().StartLaunchBallText();
+        GameObject.Find("GameManager").GetComponent<gameScriptV2>().StartLaunchBallText();
     }
 }

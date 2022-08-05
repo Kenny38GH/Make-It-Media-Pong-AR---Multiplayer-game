@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.UI;
 
+// Controlleur pour le scaler du terrain
 public class ScaleController : MonoBehaviour
 {
 
@@ -32,11 +33,5 @@ public class ScaleController : MonoBehaviour
             m_ArSessionOrigin.transform.localScale = Vector3.one / value;
         }
 
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

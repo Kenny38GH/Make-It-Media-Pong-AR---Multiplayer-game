@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
+// Controlleur de la reconnaissance de surface plane
+
 public class ARPlacementAndPlaneDetectionController : MonoBehaviour
 {
     ARPlaneManager m_ARPlaneManager;

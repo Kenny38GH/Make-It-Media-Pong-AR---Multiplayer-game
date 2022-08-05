@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 
+// Synchronisation obligatoire entre les joueurs via le serveur Photon
+
 public class MySynchronizationScript : MonoBehaviour, IPunObservable
 {
     Rigidbody rb;
